@@ -73,21 +73,21 @@ fn cache_invalidation() {
     let y3 = add3(y1.clone(), y2.clone(), x3.clone());
 
     struct InvalidateMockSubscriber {
-        invalid: bool
+        invalidate_count: u32
     }
 
     impl InvalidateMockSubscriber {
         fn new() -> Rc<RefCell<InvalidateMockSubscriber>> {
-            Rc::new(RefCell::new(Self { invalid: false }))
+            Rc::new(RefCell::new(Self { invalidate_count: 0 }))
         }
         fn reset(&mut self) {
-            self.invalid = false;
+            self.invalidate_count = 0;
         }
     }
 
     impl InvalidateCacheMut for InvalidateMockSubscriber {
         fn invalidate_cache(&mut self) {
-            self.invalid = true
+            self.invalidate_count += 1;
         }
     }
 
@@ -105,12 +105,12 @@ fn cache_invalidation() {
     y3.subscribe_to_invalidate(&(iy3.clone() as _));
 
     y3.compute();
-    assert_eq!(ix1.borrow().invalid, false);
-    assert_eq!(ix2.borrow().invalid, false);
-    assert_eq!(ix3.borrow().invalid, false);
-    assert_eq!(iy1.borrow().invalid, false);
-    assert_eq!(iy2.borrow().invalid, false);
-    assert_eq!(iy3.borrow().invalid, false);
+    assert_eq!(ix1.borrow().invalidate_count, 0);
+    assert_eq!(ix2.borrow().invalidate_count, 0);
+    assert_eq!(ix3.borrow().invalidate_count, 0);
+    assert_eq!(iy1.borrow().invalidate_count, 0);
+    assert_eq!(iy2.borrow().invalidate_count, 0);
+    assert_eq!(iy3.borrow().invalidate_count, 0);
     ix1.borrow_mut().reset();
     ix2.borrow_mut().reset();
     ix3.borrow_mut().reset();
@@ -119,12 +119,12 @@ fn cache_invalidation() {
     iy3.borrow_mut().reset();
 
     x1.set(1.0);
-    assert_eq!(ix1.borrow().invalid, true);
-    assert_eq!(ix2.borrow().invalid, false);
-    assert_eq!(ix3.borrow().invalid, false);
-    assert_eq!(iy1.borrow().invalid, true);
-    assert_eq!(iy2.borrow().invalid, true);
-    assert_eq!(iy3.borrow().invalid, true);
+    assert_eq!(ix1.borrow().invalidate_count, 1);
+    assert_eq!(ix2.borrow().invalidate_count, 0);
+    assert_eq!(ix3.borrow().invalidate_count, 0);
+    assert_eq!(iy1.borrow().invalidate_count, 1);
+    assert_eq!(iy2.borrow().invalidate_count, 1);
+    assert_eq!(iy3.borrow().invalidate_count, 1);
     ix1.borrow_mut().reset();
     ix2.borrow_mut().reset();
     ix3.borrow_mut().reset();
@@ -135,12 +135,12 @@ fn cache_invalidation() {
 
 
     x2.set(2.0);
-    assert_eq!(ix1.borrow().invalid, false);
-    assert_eq!(ix2.borrow().invalid, true);
-    assert_eq!(ix3.borrow().invalid, false);
-    assert_eq!(iy1.borrow().invalid, false);
-    assert_eq!(iy2.borrow().invalid, true);
-    assert_eq!(iy3.borrow().invalid, true);
+    assert_eq!(ix1.borrow().invalidate_count, 0);
+    assert_eq!(ix2.borrow().invalidate_count, 1);
+    assert_eq!(ix3.borrow().invalidate_count, 0);
+    assert_eq!(iy1.borrow().invalidate_count, 0);
+    assert_eq!(iy2.borrow().invalidate_count, 1);
+    assert_eq!(iy3.borrow().invalidate_count, 1);
     ix1.borrow_mut().reset();
     ix2.borrow_mut().reset();
     ix3.borrow_mut().reset();
@@ -150,12 +150,12 @@ fn cache_invalidation() {
     y3.compute();
 
     x3.set(3.0);
-    assert_eq!(ix1.borrow().invalid, false);
-    assert_eq!(ix2.borrow().invalid, false);
-    assert_eq!(ix3.borrow().invalid, true);
-    assert_eq!(iy1.borrow().invalid, false);
-    assert_eq!(iy2.borrow().invalid, false);
-    assert_eq!(iy3.borrow().invalid, true);
+    assert_eq!(ix1.borrow().invalidate_count, 0);
+    assert_eq!(ix2.borrow().invalidate_count, 0);
+    assert_eq!(ix3.borrow().invalidate_count, 1);
+    assert_eq!(iy1.borrow().invalidate_count, 0);
+    assert_eq!(iy2.borrow().invalidate_count, 0);
+    assert_eq!(iy3.borrow().invalidate_count, 1);
     ix1.borrow_mut().reset();
     ix2.borrow_mut().reset();
     ix3.borrow_mut().reset();
@@ -163,5 +163,15 @@ fn cache_invalidation() {
     iy2.borrow_mut().reset();
     iy3.borrow_mut().reset();
     y3.compute();
+
+    x1.set(11.0);
+    x2.set(12.0);
+    x3.set(13.0);
+    assert_eq!(ix1.borrow().invalidate_count, 1);
+    assert_eq!(ix2.borrow().invalidate_count, 1);
+    assert_eq!(ix3.borrow().invalidate_count, 1);
+    assert_eq!(iy1.borrow().invalidate_count, 1);
+    assert_eq!(iy2.borrow().invalidate_count, 1);
+    assert_eq!(iy3.borrow().invalidate_count, 1);
 }
 

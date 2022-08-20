@@ -74,8 +74,10 @@ pub mod internals {
 
     impl<T: ComputeMut> InvalidateCacheMut for CachingNodeWrapper<T> {
         fn invalidate_cache(&mut self) {
-            self.cached_value = None;
-            self.invalidate_publisher.publish_invalidate();
+            if self.cached_value.is_some() {
+                self.cached_value = None;
+                self.invalidate_publisher.publish_invalidate();
+            }
         }
     }
 
