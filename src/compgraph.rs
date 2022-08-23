@@ -59,10 +59,8 @@ pub mod internals {
 
     impl<T: ComputeMut> ComputeMut for CachingNodeWrapper<T> {
         fn compute(&mut self) -> Float {
-            if self.cached_value.is_none() {
-                self.cached_value = Some(self.inner.compute())
-            }
-            self.cached_value.unwrap()
+            let cached_value = &mut self.cached_value;
+            *cached_value.get_or_insert_with(|| self.inner.compute())
         }
     }
 
