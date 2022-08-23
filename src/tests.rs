@@ -175,3 +175,10 @@ fn cache_invalidation() {
     assert_eq!(iy3.borrow().invalidate_count, 1);
 }
 
+#[test]
+fn nodes_are_dynamic() {
+    let mut _node = add(1.0, 2.0);
+    _node = mul(4.0, _node);
+    _node = add3(_node.clone(), _node.clone(), 3.0);
+    assert_eq!(_node.compute(), 27.0);
+}

@@ -82,7 +82,7 @@ pub mod internals {
 }
 use internals::*;
 
-trait ComputeNodeMut: ComputeMut {
+pub trait ComputeNodeMut: ComputeMut {
     fn subscribe_to_invalidate(&mut self, subscriber: &Rc<RefCell<dyn InvalidateCacheMut>>);
 }
 
@@ -97,7 +97,9 @@ pub trait InputNodeRef: ComputeNodeRef {
     fn set(&self, value: Float);
 }
 
-impl<T: ComputeNodeMut> ComputeNodeRef for Rc<RefCell<T>> {
+pub type DynamicComputeNodeRef = Rc<RefCell<dyn ComputeNodeMut>>;
+
+impl<T: ComputeNodeMut + ?Sized> ComputeNodeRef for Rc<RefCell<T>> {
     fn compute(&self) -> Float {
         self.borrow_mut().compute()
     }
@@ -148,7 +150,7 @@ macro_rules! define_nodes {
         $visibility:vis $name:ident($($params:ident),+) $body:block
        )*} => {
         $(
-            $visibility fn $name($($params: impl $crate::compgraph::ComputeNodeRef + 'static),+) -> impl $crate::compgraph::ComputeNodeRef {
+            $visibility fn $name($($params: impl $crate::compgraph::ComputeNodeRef + 'static),+) -> $crate::compgraph::DynamicComputeNodeRef {
 
                 #[allow(non_camel_case_types)]
                 struct NodeImpl<$($params: $crate::compgraph::ComputeNodeRef),+> {
